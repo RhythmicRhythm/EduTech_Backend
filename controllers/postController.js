@@ -118,10 +118,10 @@ const getPostById = asyncHandler(async (req, res) => {
 
 // Add comment to post
 const addComment = asyncHandler(async (req, res) => {
-  const { name } = req.body;
+  const { file_name } = req.body;
   const file = req.files.file;
 
-  if (!name) {
+  if (!file_name) {
     res.status(400);
     throw new Error("Please enter a comment");
   }
@@ -154,7 +154,7 @@ const addComment = asyncHandler(async (req, res) => {
     }
 
     const course_file = {
-      name,
+      file_name,
       file: file ? resultFile.secure_url : undefined,
       user: req.user.id,
     };

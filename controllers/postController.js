@@ -7,7 +7,7 @@ const axios = require("axios");
 const fs = require("fs");
 const multer = require("multer");
 const admin = require("firebase-admin");
-const { uuid } = require('uuidv4');
+const { uuid } = require("uuidv4");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -126,6 +126,11 @@ const addComment = asyncHandler(async (req, res) => {
     throw new Error("Please enter a comment");
   }
 
+  if (!file) {
+    res.status(400);
+    throw new Error("Please a file");
+  }
+
   try {
     // Handle Image upload
     let resultFile = {}; // Move this line outside the if block
@@ -177,17 +182,17 @@ const uploadfile = asyncHandler(async (req, res) => {
       metadata: {
         firbaseStorageDownloadTokens: uuid(),
         contentType: req.file.mimetype,
-        cacheControl: "public, max-age-31536000"
+        cacheControl: "public, max-age-31536000",
       },
     };
     // Upload file to Firebase Storage
     const blob = bucket.file(req.file.originalname);
     const blobStream = blob.createWriteStream({
       metadata: metadata,
-      gzip: true
+      gzip: true,
     });
 
-    blobStream.on("error", err => {
+    blobStream.on("error", (err) => {
       res.status(500).send("File uploaded failed.");
     });
 

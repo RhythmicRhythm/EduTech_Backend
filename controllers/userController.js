@@ -6,7 +6,16 @@ const crypto = require("crypto");
 const Token = require("../models/tokenModel");
 const sendEmail = require("../utils/sendEmail");
 const nodemailer = require("nodemailer");
+const cloudinary = require("cloudinary").v2;
 const errorHandler = require("../middleWare/errorMiddleware");
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+  secure: true,
+});
+
 
 // Generate Token
 const generateToken = (id) => {

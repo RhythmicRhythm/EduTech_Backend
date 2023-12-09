@@ -16,7 +16,6 @@ cloudinary.config({
   secure: true,
 });
 
-
 // Generate Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
@@ -49,7 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
     fullname,
     email,
     password,
-    isAdmin
+    isAdmin,
   });
 
   //   Generate Token
@@ -162,11 +161,10 @@ const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   try {
-    const {title, semester, department, dob } = req.body
+    const { title, semester, department, dob } = req.body;
     const file = req.files.photo;
 
     console.log(file);
-
 
     if (!user) {
       res.status(400);
@@ -191,15 +189,13 @@ const updateUser = asyncHandler(async (req, res) => {
       console.log(result);
     }
 
-
     await user.save();
 
     console.log("updated");
     res.status(200).json(user);
-
   } catch (error) {
     res.status(400);
-      throw new Error(error);
+    throw new Error(error);
   }
 });
 
@@ -208,14 +204,7 @@ const getUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    const { _id, fullname, email, photo, isAdmin } = user;
-    res.status(200).json({
-      _id,
-      fullname,
-      email,
-      photo,
-      isAdmin,
-    });
+    res.status(200).json(user);
   } else {
     res.status(400);
     throw new Error("User Not Found");

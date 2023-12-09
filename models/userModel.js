@@ -34,7 +34,19 @@ const userSchema = mongoose.Schema(
       required: [true, "Please add a photo"],
       default: "https://img.freepik.com/free-vector/vector-background-seamless-retro-camera-tripod_2065-591.jpg?w=740&t=st=1700038939~exp=1700039539~hmac=2bae01dda7df3a48b21cf621060870cc69e205dae4e4d081a81f27ade6f138bf",
     },
-    resetPasswordCode: {
+    title: {
+      type: String,
+    },
+    semester: {
+      type: String,
+    },
+    department: {
+      type: String,
+    },
+    dob: {
+      type: String,
+    },
+     resetPasswordCode: {
       type: String,
     },
     resetPasswordCodeExpires: {

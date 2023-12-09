@@ -155,6 +155,10 @@ const updateUser = asyncHandler(async (req, res) => {
 
   try {
     const {title, semester, department, dob } = req.body
+    const file = req.files.photo;
+
+    console.log(file);
+    
 
     if (!user) {
       res.status(400);

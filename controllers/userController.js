@@ -109,12 +109,10 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(200).json({
       _id,
       fullname,
-
       email,
       password,
       isAdmin,
       photo,
-
       token,
     });
   } else {

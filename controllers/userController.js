@@ -24,7 +24,7 @@ const generateToken = (id) => {
 
 // REGISTER USER
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullname, email, password } = req.body;
+  const { fullname, email, password, isAdmin } = req.body;
 
   // Validation
   if (!fullname || !email || !password) {
@@ -49,6 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
     fullname,
     email,
     password,
+    isAdmin
   });
 
   //   Generate Token

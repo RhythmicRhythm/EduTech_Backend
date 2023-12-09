@@ -30,7 +30,7 @@ const postSchema = mongoose.Schema(
     },
     course_files: [
       {
-        name: {
+        file_name: {
           type: String,
           required: true,
         },
@@ -47,7 +47,6 @@ const postSchema = mongoose.Schema(
           type: Date,
           default: Date.now,
         },
-       
       },
     ],
   },

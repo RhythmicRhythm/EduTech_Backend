@@ -139,7 +139,10 @@ const addComment = asyncHandler(async (req, res) => {
       // Upload image to Cloudinary and apply transformations
       resultFile = await cloudinary.uploader.upload(file.tempFilePath, {
         public_id: `${Date.now()}_image`,
-        transformation: { flags: `attachment:${name}`, fetch_format: "auto" },
+        transformation: {
+          flags: `attachment:${file_name}`,
+          fetch_format: "auto",
+        },
         format: "pdf",
       });
 

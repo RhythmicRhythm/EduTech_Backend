@@ -153,45 +153,27 @@ const loginStatus = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
-  if (user) {
-    const {
-      firstname,
-      lastname,
-      phone,
-      email,
-      isAdmin,
-      photo,
-      gender,
-      marital_status,
-      dob,
-    } = user;
+  try {
+    const {title, semester, department, dob } = req.body
 
-    user.email = email;
-    user.firstname = req.body.firstname || firstname;
-    user.lastname = req.body.lastname || lastname;
-    user.phone = req.body.phone || phone;
-    user.isAdmin = req.body.isAdmin || isAdmin;
-    user.gender = req.body.gender || gender;
-    user.photo = req.body.photo || photo;
-    user.dob = req.body.dob || dob;
-    user.marital_status = req.body.marital_status || marital_status;
+    if (!user) {
+      res.status(400);
+      throw new Error("error findng user");
+    }
 
-    const updatedUser = await user.save();
-    res.status(200).json({
-      _id: updatedUser._id,
-      firstname: updatedUser.firstname,
-      lastname: updatedUser.lastname,
-      email: updatedUser.email,
-      photo: updatedUser.photo,
-      isAdmin: updatedUser.isAdmin,
-      phone: updatedUser.phone,
-      dob: updatedUser.dob,
-      gender: updatedUser.gender,
-      marital_status: updatedUser.marital_status,
-    });
-  } else {
-    res.status(404);
-    throw new Error("User not found");
+    user.title = title;
+    user.semester = semester;
+    user.department = department;
+    user.dob = dob;
+
+    await user.save();
+
+    console.log("updated");
+    res.status(200).json(user);
+
+  } catch (error) {
+    res.status(400);
+      throw new Error(error);
   }
 });
 

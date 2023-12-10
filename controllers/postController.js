@@ -116,6 +116,21 @@ const getPostById = asyncHandler(async (req, res) => {
   res.status(200).json(post);
 });
 
+// Delete Post
+const deletePost = asyncHandler(async (req, res) => {
+  try {
+    const deletedPost = await Post.findByIdAndDelete(req.params.id);
+
+    if (!deletedPost) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    return res.status(200).json({ message: "Post deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // Add comment to post
 const addComment = asyncHandler(async (req, res) => {
   const { file_name } = req.body;

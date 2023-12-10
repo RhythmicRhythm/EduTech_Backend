@@ -8,6 +8,7 @@ const sendEmail = require("../utils/sendEmail");
 const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 const errorHandler = require("../middleWare/errorMiddleware");
+const verifier = new (require("email-verifier"))(process.env.EMAIL_VERIFY);
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -23,16 +24,17 @@ const generateToken = (id) => {
 
 // REGISTER USER
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullname, email, password, isAdmin } = req.body;
+  const { fullname, password, email, isAdmin } = req.body;
 
-  // Validation
   if (!fullname || !email || !password) {
     res.status(400);
     throw new Error("Please fill in all required fields");
   }
-  if (password.length < 6) {
+
+  if (password.length < 8) {
+    return res
     res.status(400);
-    throw new Error("Password must be up to 6 characters");
+    throw new Error("Password must be up to 8 characters");
   }
 
   // Check if user email already exists
@@ -43,41 +45,158 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Email has already been registered");
   }
 
-  // Create new user
-  const user = await User.create({
-    fullname,
-    email,
-    password,
-    isAdmin,
+  // Verify email
+  verifier.verify(email, (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(404).json({ error: "email verifier" });
+    }
+
+    if (
+      data.formatCheck === "true" &&
+      data.disposableCheck === "false" &&
+      data.dnsCheck === "true" &&
+      data.smtpCheck !== "false"
+    ) {
+      // Send welcome email to the user
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: 587,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Welcome to EASYLEND",
+        html: `
+      
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: 'Arial', sans-serif;
+              color: #333;
+              background-color: #f9f9f9;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #fff;
+              border-radius: 10px;
+              box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            h1 {
+              font-size: 28px;
+              font-weight: bold;
+              margin-bottom: 20px;
+              color: #007bff;
+            }
+            
+            p {
+              font-size: 16px;
+              margin-bottom: 15px;
+              line-height: 1.6;
+            }
+            
+            strong {
+              font-weight: bold;
+            }
+            
+            .code {
+              font-size: 18px;
+              font-weight: bold;
+              color: #007bff;
+            }
+            
+            .signature {
+              margin-top: 20px;
+              font-style: italic;
+              color: #777;
+            }
+            
+            .elegant {
+              font-size: 18px;
+              font-style: italic;
+              color: #007bff;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Welcome to EASYLEND</h1>
+            <p><strong>Dear ${fullname},</strong></p>
+            <p>We are delighted to extend our warmest greetings as you join the EASYLEND community.</p>
+            <p>Thank you for choosing EASYLEND for your financial needs.</p>
+            
+          
+            <p class="signature">Warm regards,<br>EASYLEND Team</p>
+          </div>
+        </body>
+        </html>
+        
+          `,
+      };
+
+      // Attempt to send the welcome email
+      transporter.sendMail(mailOptions, async (error) => {
+        if (error) {
+          console.log(error);
+          return res
+            .status(400)
+            .json({ error: "error sending verification email" });
+        } else {
+          // Create new user
+          const user = await User.create({
+            fullname,
+            email,
+            password,
+            isAdmin,
+          });
+
+          //   Generate Token
+          const token = generateToken(user._id);
+
+          // Send HTTP-only cookie
+          res.cookie("token", token, {
+            path: "/",
+            httpOnly: true,
+            expires: new Date(Date.now() + 1000 * 86400), // 1 day
+            sameSite: "none",
+            secure: true,
+          });
+
+          if (user) {
+            const { _id, fullname, isAdmin, email, password, photo } = user;
+
+            res.status(201).json({
+              _id,
+              fullname,
+              isAdmin,
+              email,
+              password,
+              photo,
+              token,
+            });
+          } else {
+            res.status(400).json({ error: "Error" });
+          }
+        }
+      });
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Please use a valid email address" });
+    }
   });
-
-  //   Generate Token
-  const token = generateToken(user._id);
-
-  // Send HTTP-only cookie
-  res.cookie("token", token, {
-    path: "/",
-    httpOnly: true,
-    expires: new Date(Date.now() + 1000 * 86400), // 1 day
-    sameSite: "none",
-    secure: true,
-  });
-
-  if (user) {
-    const { _id, fullname, isAdmin, email, password, photo } = user;
-    res.status(200).json({
-      _id,
-      fullname,
-      isAdmin,
-      email,
-      password,
-      photo,
-      token,
-    });
-  } else {
-    res.status(400);
-    throw new Error("Invalid user data");
-  }
 });
 
 // Login User

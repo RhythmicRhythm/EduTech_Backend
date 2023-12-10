@@ -391,6 +391,7 @@ module.exports = {
   getDownload,
   uploadfile,
   addComment,
+  deletePost,
   addReply,
   likePost,
   dislikePost,

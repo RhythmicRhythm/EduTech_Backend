@@ -6,6 +6,7 @@ const {
   addComment,
   getDownload,
   uploadfile,
+  deletePost,
   addReply,
   likePost,
   getPostById,
@@ -25,6 +26,7 @@ router.post("/", protect, createPost);
 
 router.get("/", protect, getPosts);
 router.get("/:id", protect, getPostById);
+router.delete("/:id", protect, deletePost);
 router.get("/getpostuser", protect, getPostUser);
 
 router.post("/addcomment/:id", protect, addComment);

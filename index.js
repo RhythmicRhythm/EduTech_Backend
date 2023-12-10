@@ -26,7 +26,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://educentral-community-app.onrender.com",
+      "https://edu-tech-front.netlify.app",
     ],
     credentials: true,
   })

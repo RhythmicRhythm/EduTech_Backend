@@ -24,7 +24,7 @@ router.get("/getuser", protect, getUser);
 router.patch("/changepassword", protect, changePassword);
 router.put("/updateuser", protect, updateUser);
 router.post("/forgotpassword", forgotPassword);
-router.post("/resetemailsent", resetemailsent);
+router.post("/resetemailsent/:email", resetemailsent);
 router.put("/resetpassword", resetPassword);
 
 module.exports = router;

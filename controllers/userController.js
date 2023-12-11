@@ -350,10 +350,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
 //Reset Password Sent
 const resetemailsent = asyncHandler(async (req, res) => {
   const { code } = req.body;
-  const email = req.session.resetPasswordEmail;
+  const email = req.params.email;
   console.log(email);
 
+  console.log("hello");
+
   const user = await User.findOne({ email });
+  console.log(user);
 
   if (!code) {
     res.status(404);

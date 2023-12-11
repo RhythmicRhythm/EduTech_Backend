@@ -324,7 +324,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
               <body>
                 <div class="container">
                   <div class="header">
-                    <h1>QC-Investment || Development Finance </h1>
+                    <h1>Off Space Accademy </h1>
                   </div>
                   <p class="message">Hello ${fullname}</p>
                   <p class="message">We received a request to reset your password. Please use the following verification code to proceed:</p>

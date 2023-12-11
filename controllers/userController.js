@@ -382,7 +382,7 @@ const resetemailsent = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
   const { newPassword } = req.body;
   console.log(newPassword);
-  const email = req.session.resetPasswordEmail;
+  const email = req.params.email;
   console.log(email);
   try {
     // Validation

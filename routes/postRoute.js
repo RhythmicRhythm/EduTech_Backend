@@ -66,17 +66,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
   //     expires: Date.now() + 3600 * 1000, // 1 hour
   //   });
 
-
   //   res.send({ message: 'File uploaded successfully!', url: publicUrl });
   //   console.log(publicUrl);
 
-
-
-
-    
-
-
-    
   // }
   if (req.file) {
     res.send(req.file);
@@ -86,7 +78,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
 router.get("/download", getDownload);
 // router.post("/upload", upload.single('file'),  uploadfi);
-router.post("/", protect, upload.single("file"), createPost);
+router.post("/", protect, upload.single("image"), createPost);
 
 router.get("/", protect, getPosts);
 router.get("/:id", protect, getPostById);

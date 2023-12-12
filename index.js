@@ -47,7 +47,7 @@ app.use(
 app.use("/users", userRoute);
 app.use("/posts", postRoute);
 
-/////////
+
 
 // Routes
 app.get("/", (req, res) => {

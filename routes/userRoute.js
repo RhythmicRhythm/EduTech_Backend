@@ -32,7 +32,7 @@ router.get("/loggedin", loginStatus);
 router.get("/getuser", protect, getUser);
 
 router.patch("/changepassword", protect, changePassword);
-router.put("/updateuser", protect, upload.single("file"), updateUser);
+router.put("/updateuser", protect, upload.single("photo"), updateUser);
 router.post("/forgotpassword", forgotPassword);
 router.post("/resetemailsent/:email", resetemailsent);
 router.put("/resetpassword/:email", resetPassword);

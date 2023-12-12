@@ -32,7 +32,7 @@ app.use(
   })
 );
 
-app.use(fileupload({ useTempFiles: true }));
+// app.use(fileupload({ useTempFiles: true }));
 
 // Express session
 app.use(

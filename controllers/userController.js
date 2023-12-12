@@ -163,9 +163,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
   try {
     const { title, semester, department, dob } = req.body;
-    const file = req.files.photo;
-
-    console.log(file);
+   
 
     if (!user) {
       res.status(400);
@@ -177,9 +175,10 @@ const updateUser = asyncHandler(async (req, res) => {
     user.department = department;
     user.dob = dob;
 
-    if (file) {
-      // Handle image upload  tempFilePath
-      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+    if (req.file) {
+      const file = req.file;
+    //  Handle image upload  tempFilePath
+      const result = await cloudinary.uploader.upload(file.path, {
         public_id: `${Date.now()}`,
         transformation: [
           { width: 1080, height: 1080, quality: 80, crop: "fill" },

@@ -8,6 +8,7 @@ const fs = require("fs");
 const multer = require("multer");
 const admin = require("firebase-admin");
 const { uuid } = require("uuidv4");
+const path = require("path");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -16,23 +17,22 @@ cloudinary.config({
   secure: true,
 });
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+// const storage = multer.memoryStorage();
+// const upload = multer({ storage: storage });
 
-// Firebase setup
+//Firebase setup
 const serviceAccount = require("../edu-tech-rhythmic-firebase-adminsdk-fn22u-086ee594f1.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: "gs://edu-tech-rhythmic.appspot.com",
 });
 
-const bucket = admin.storage().bucket();
+// const bucket = admin.storage().bucket();
 
 const createPost = asyncHandler(async (req, res) => {
   try {
     const { course_title, course_description, course_code } = req.body;
-    const image = req.files.image;
-    console.log(image);
+    
 
     // Validation
     if (!course_title || !course_description || !course_code) {
@@ -41,17 +41,25 @@ const createPost = asyncHandler(async (req, res) => {
     }
 
     // Handle Image upload
-    let resultImage = {}; // Move this line outside the if block
+    // let publicUrl = {}; // Move this line outside the if block
 
-    if (image) {
-      // Upload image to Cloudinary and apply transformations
-      resultImage = await cloudinary.uploader.upload(image.tempFilePath, {
-        public_id: `${Date.now()}_image`,
-        transformation: [
-          { width: 1080, height: 1080, quality: 80, crop: "fill" },
-        ],
+    if (req.file) {
+      const file = req.file;
+      
+      const storageRef = admin.storage().bucket().file(file.originalname);
+
+      // Upload the file to Firebase Storage
+      await storageRef.save(file.buffer, {
+        contentType: file.mimetype,
       });
-      console.log(resultImage.secure_url);
+
+      // Get the public URL of the uploaded file
+      var publicUrl = await storageRef.getSignedUrl({
+        action: "read",
+        expires: Date.now() + 3600 * 1000, // 1 hour
+      });
+
+    
     }
 
     // Fetch user from the database
@@ -64,7 +72,7 @@ const createPost = asyncHandler(async (req, res) => {
       course_title,
       course_code,
       course_description: course_description.replace(/\n/g, "<br/>"),
-      image: image ? resultImage.secure_url : undefined,
+      image: publicUrl.toString(),
     });
 
     res.status(201).json(post);
@@ -134,54 +142,51 @@ const deletePost = asyncHandler(async (req, res) => {
 // Add comment to post
 const addComment = asyncHandler(async (req, res) => {
   const { file_name } = req.body;
-  const file = req.files.file;
 
   if (!file_name) {
     res.status(400);
     throw new Error("Please enter a comment");
   }
 
-  if (!file) {
-    res.status(400);
-    throw new Error("Please a file");
-  }
-
   try {
     // Handle Image upload
     let resultFile = {}; // Move this line outside the if block
 
-    if (file) {
-      // Upload image to Cloudinary and apply transformations
-      resultFile = await cloudinary.uploader.upload(file.tempFilePath, {
-        public_id: `${Date.now()}_image`,
-        transformation: {
-          flags: `attachment:${file_name}`,
-          fetch_format: "auto",
-        },
-        format: "pdf",
+    if (req.file) {
+      const file = req.file;
+      // res.send(req.file);
+      const storageRef = admin.storage().bucket().file(file.originalname);
+
+      // Upload the file to Firebase Storage
+      await storageRef.save(file.buffer, {
+        contentType: file.mimetype,
       });
 
-      console.log(resultFile.secure_url);
-      console.log(resultFile.public_id);
+      // Get the public URL of the uploaded file
+      const publicUrl = await storageRef.getSignedUrl({
+        action: "read",
+        expires: Date.now() + 3600 * 1000, // 1 hour
+      });
+
+      const post = await Post.findById(req.params.id);
+
+      if (!post) {
+        res.status(404);
+        throw new Error("Post not found");
+      }
+
+      const course_file = {
+        file_name,
+        file: publicUrl.toString(),
+        user: req.user.id,
+      };
+
+      post.course_files.push(course_file);
+
+      await post.save();
+
+      res.status(201).json(post);
     }
-    const post = await Post.findById(req.params.id);
-
-    if (!post) {
-      res.status(404);
-      throw new Error("Post not found");
-    }
-
-    const course_file = {
-      file_name,
-      file: file ? resultFile.secure_url : undefined,
-      user: req.user.id,
-    };
-
-    post.course_files.push(course_file);
-
-    await post.save();
-
-    res.status(201).json(post);
   } catch (err) {
     console.error(err);
     res.status(500).send(err);
@@ -189,38 +194,42 @@ const addComment = asyncHandler(async (req, res) => {
 });
 
 const uploadfile = asyncHandler(async (req, res) => {
-  // const file = req.file
-  // console.log(file);
   try {
     if (!req.file) {
       return res.status(400).send("No file uploaded.");
     }
 
-    const metadata = {
+    const file = req.file;
+
+    // Create a unique filename to avoid overwriting existing files
+    const uniqueFileName = Date.now() + path.extname(file.originalname);
+
+    // Upload the file to Firebase Storage
+    const fileUpload = bucket.file(uniqueFileName);
+    const stream = fileUpload.createWriteStream({
       metadata: {
-        firbaseStorageDownloadTokens: uuid(),
-        contentType: req.file.mimetype,
-        cacheControl: "public, max-age-31536000",
+        contentType: file.mimetype,
       },
-    };
-    // Upload file to Firebase Storage
-    const blob = bucket.file(req.file.originalname);
-    const blobStream = blob.createWriteStream({
-      metadata: metadata,
-      gzip: true,
     });
 
-    blobStream.on("error", (err) => {
-      res.status(500).send("File uploaded failed.");
+    stream.on("error", (err) => {
+      console.error(err);
+      return res.status(500).send(err.message);
     });
 
-    blobStream.on("finish", () => {
-      res.status(200).send("File uploaded successfully.");
+    stream.on("finish", () => {
+      const fileUrl = `https://storage.googleapis.com/${bucketName}/${fileUpload.name}`;
+
+      // Here, you can save the Firebase Storage URL or any relevant information in your database
+
+      res.send(`File uploaded to Firebase Storage: ${fileUrl}`);
     });
 
-    blobStream.end(file.buffer);
+    // Use pipe to handle the file stream correctly
+    file.stream.pipe(stream);
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    return res.status(500).send(error.message);
   }
 });
 

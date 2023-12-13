@@ -56,7 +56,7 @@ const createPost = asyncHandler(async (req, res) => {
       // Get the public URL of the uploaded file
       var publicUrl = await storageRef.getSignedUrl({
         action: "read",
-        expires: Date.now() + 3600 * 1000, // 1 hour
+        expires: Date.now() + 24 * 3600 * 1000, // 24 hour
       });
 
     
@@ -165,7 +165,7 @@ const addComment = asyncHandler(async (req, res) => {
       // Get the public URL of the uploaded file
       const publicUrl = await storageRef.getSignedUrl({
         action: "read",
-        expires: Date.now() + 3600 * 1000, // 1 hour
+        expires: Date.now() + 24 * 3600 * 1000, // 24 hour
       });
 
       const post = await Post.findById(req.params.id);

@@ -18,9 +18,9 @@ const multer = require("multer");
 
 // Use memory storage for Firebase
 const storage = multer.diskStorage({
-  destination: 'tmp/', // Temporary directory for storing uploaded files
+  destination: "tmp/", // Temporary directory for storing uploaded files
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + '-' + file.originalname); // Generate unique filename
+    cb(null, new Date().toISOString() + "-" + file.originalname); // Generate unique filename
   },
 });
 const upload = multer({ storage });

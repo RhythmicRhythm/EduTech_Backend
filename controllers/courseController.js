@@ -202,7 +202,6 @@ const registerForCourse = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
   const studentId = req.user._id.toString(); // Assuming req.user contains authenticated user info
   console.log(studentId, courseId);
-  
 
   try {
     // Find the course by ID
@@ -261,8 +260,31 @@ const getRegisteredCourses = asyncHandler(async (req, res) => {
   }
 });
 
+const getLecturerCourses = asyncHandler(async (req, res) => {
+  const lecturerId = req.user._id; // Assuming req.user contains the authenticated lecturer's info
 
+  try {
+    // Find all courses where this lecturer is assigned
+    const courses = await Course.find({ lecturers: lecturerId })
+      .populate({
+        path: "lecturers",
+        select: "fullname email", // Customize the fields to return
+      })
+      .exec();
 
+    if (!courses || courses.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No courses found for this lecturer" });
+    }
+
+    res.status(200).json(courses);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
 
 module.exports = {
   createCourse,
@@ -273,4 +295,5 @@ module.exports = {
   assignLecturer,
   registerForCourse,
   getRegisteredCourses,
+  getLecturerCourses,
 };

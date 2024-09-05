@@ -7,7 +7,8 @@ const {
   deleteCourse,
   assignLecturer,
   registerForCourse,
-  getRegisteredCourses
+  getRegisteredCourses,
+  getLecturerCourses
 } = require("../controllers/courseController");
 const protect = require("../middleWare/authMiddleware");
 const router = express.Router();
@@ -17,7 +18,8 @@ const upload = multer({ storage });
 
 router.post("/newcourse", protect, upload.single("image"), createCourse);
 router.get("/allcourses", protect, getCourses);
-router.get("/personal", protect, getRegisteredCourses);
+router.get("/studentcourses", protect, getRegisteredCourses);
+router.get("/lecturerscourses", protect, getLecturerCourses);
 router.get("/:id", protect, getCourseById);
 router.post(
   "/uploadcoursematerial/:id",

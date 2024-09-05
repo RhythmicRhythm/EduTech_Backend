@@ -1,16 +1,7 @@
 const mongoose = require("mongoose");
 
-const postSchema = mongoose.Schema(
+const courseSchema = mongoose.Schema(
   {
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    name: {
-      type: String,
-      required: true,
-    },
     course_title: {
       type: String,
       required: true,
@@ -43,10 +34,23 @@ const postSchema = mongoose.Schema(
           type: String,
           required: true,
         },
+
         createdAt: {
           type: Date,
           default: Date.now,
         },
+      },
+    ],
+    students: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    lecturers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Assuming lecturers are users
       },
     ],
   },
@@ -56,6 +60,6 @@ const postSchema = mongoose.Schema(
   }
 );
 
-const Post = mongoose.model("Post", postSchema);
+const Course = mongoose.model("Course", courseSchema);
 
-module.exports = Post;
+module.exports = Course;

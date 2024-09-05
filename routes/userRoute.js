@@ -5,6 +5,8 @@ const {
   logoutUser,
   loginStatus,
   getUser,
+  getLecturers,
+  getAllUsers,
   updateUser,
   changePassword,
 
@@ -26,10 +28,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post("/register", registerUser);
+
 router.post("/login", loginUser);
+
 router.get("/logout", logoutUser);
 router.get("/loggedin", loginStatus);
 router.get("/getuser", protect, getUser);
+router.get("/getlecturer", protect, getLecturers);
+router.get("/getallusers", protect, getAllUsers);
 
 router.patch("/changepassword", protect, changePassword);
 router.put("/updateuser", protect, upload.single("photo"), updateUser);

@@ -3,15 +3,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const userRoute = require("./routes/userRoute");
-const postRoute = require("./routes/postRoute");
+const courseRoute = require("./routes/courseRoute");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 const errorHandler = require("./middleWare/errorMiddleware");
-const multer = require("multer");
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-const fileupload = require("express-fileupload");
 const session = require("express-session");
 const app = express();
 
@@ -24,15 +19,10 @@ app.use(bodyParser.json());
 // cors
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://edu-tech-front.netlify.app",
-    ],
+    origin: ["http://localhost:5173"],
     credentials: true,
   })
 );
-
-// app.use(fileupload({ useTempFiles: true }));
 
 // Express session
 app.use(
@@ -45,14 +35,7 @@ app.use(
 
 // Routes Middleware
 app.use("/users", userRoute);
-app.use("/posts", postRoute);
-
-
-
-// Routes
-app.get("/", (req, res) => {
-  res.send("Home Page");
-});
+app.use("/course", courseRoute);
 
 //Error Middleware
 app.use(errorHandler);

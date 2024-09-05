@@ -1,14 +1,10 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
+const Lecturer = require("../models/lecturersModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
-const Token = require("../models/tokenModel");
-const sendEmail = require("../utils/sendEmail");
 const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
-const errorHandler = require("../middleWare/errorMiddleware");
-const verifier = new (require("email-verifier"))(process.env.EMAIL_VERIFY);
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -28,106 +24,102 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // Validation
   if (!fullname || !email || !password) {
-    res.status(400);
-    throw new Error("Please fill in all required fields");
+    return res
+      .status(400)
+      .json({ message: "Please fill in all required fields" });
   }
   if (password.length < 6) {
-    res.status(400);
-    throw new Error("Password must be up to 6 characters");
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters" });
   }
 
   // Check if user email already exists
   const userExists = await User.findOne({ email });
-
   if (userExists) {
-    res.status(400);
-    throw new Error("Email has already been registered");
+    return res
+      .status(400)
+      .json({ message: "Email has already been registered" });
   }
 
-  // Create new user
-  const user = await User.create({
-    fullname,
-    email,
-    password,
-    isAdmin,
-  });
-
-  //   Generate Token
-  const token = generateToken(user._id);
-
-  // Send HTTP-only cookie
-  res.cookie("tokenx", token, {
-    path: "/",
-    httpOnly: true,
-    expires: new Date(Date.now() + 1000 * 86400), // 1 day
-    sameSite: "none",
-    secure: true,
-  });
-
-  if (user) {
-    const { _id, fullname, isAdmin, email, password, photo } = user;
-    res.status(200).json({
-      _id,
+  try {
+    // Create new user
+    const user = await User.create({
       fullname,
-      isAdmin,
       email,
       password,
-      photo,
-      token,
+      isAdmin,
     });
-  } else {
-    res.status(400);
-    throw new Error("Invalid user data");
+
+    // Generate Token
+    const token = generateToken(user._id);
+
+    // Send HTTP-only cookie
+    res.cookie("tokenx", token, {
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
+    });
+
+    // Respond with user data (excluding password)
+    res.status(201).json(user);
+  } catch (error) {
+    console.log("Error in signup controller", error);
+
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-// Login User
+// LOGIN USER
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate Request
-  if (!email || !password) {
-    res.status(400);
-    throw new Error("Please add email and password");
-  }
+  try {
+    // Validate Request
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please add email and password" });
+    }
 
-  // Check if user exists
-  const user = await User.findOne({ email });
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found, please sign up" });
+    }
 
-  if (!user) {
-    res.status(400);
-    throw new Error("User not found, please signup");
-  }
+    // Check if password is correct
+    const passwordIsCorrect = await bcrypt.compare(password, user.password);
+    if (!passwordIsCorrect) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
 
-  // User exists, check if password is correct
-  const passwordIsCorrect = await bcrypt.compare(password, user.password);
+    // Generate Token
+    const token = generateToken(user._id);
 
-  //   Generate Token
-  const token = generateToken(user._id);
+    // Send HTTP-only cookie
+    res.cookie("token", token, {
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
+    });
 
-  // Send HTTP-only cookie
-  res.cookie("token", token, {
-    path: "/",
-    httpOnly: true,
-    expires: new Date(Date.now() + 1000 * 86400), // 1 day
-    sameSite: "none",
-    secure: true,
-  });
-
-  if (user && passwordIsCorrect) {
-    const { _id, fullname, photo, email, password, isAdmin } = user;
+    // Respond with user data (excluding password)
     res.status(200).json({
-      _id,
-      fullname,
-      email,
-      password,
-      isAdmin,
-      photo,
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      photo: user.photo,
       token,
     });
-  } else {
-    res.status(400);
-    throw new Error("Invalid email or password");
+  } catch (error) {
+    // Catch unexpected errors and respond with a generic error message
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -163,7 +155,6 @@ const updateUser = asyncHandler(async (req, res) => {
 
   try {
     const { title, semester, department, dob } = req.body;
-   
 
     if (!user) {
       res.status(400);
@@ -177,7 +168,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
     if (req.file) {
       const file = req.file;
-    //  Handle image upload  tempFilePath
+      //  Handle image upload  tempFilePath
       const result = await cloudinary.uploader.upload(file.path, {
         public_id: `${Date.now()}`,
         transformation: [
@@ -198,6 +189,15 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+const getAllUsers = asyncHandler(async (req, res) => {
+  try {
+    // Find all users and exclude the password field
+    const users = await User.find({}).select("-password");
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 // Get User Data
 const getUser = asyncHandler(async (req, res) => {
@@ -208,6 +208,15 @@ const getUser = asyncHandler(async (req, res) => {
   } else {
     res.status(400);
     throw new Error("User Not Found");
+  }
+});
+
+const getLecturers = asyncHandler(async (req, res) => {
+  try {
+    const lecturers = await User.find({ role: "lecturer" }).select("-password");
+    res.status(200).json(lecturers);
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -421,7 +430,9 @@ module.exports = {
   loginUser,
   logoutUser,
   loginStatus,
+  getAllUsers,
   getUser,
+  getLecturers,
   updateUser,
   changePassword,
   forgotPassword,

@@ -29,6 +29,6 @@ router.post(
 );
 router.delete("/:id", protect, deleteCourse);
 router.post("/assignlecturer/:courseId/:lecturerId", protect, assignLecturer);
-router.post("/register/:courseId", protect, registerForCourse);
+router.post("/registercourse/:courseId", protect, registerForCourse);
 
 module.exports = router;

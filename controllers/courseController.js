@@ -79,19 +79,18 @@ const getCourses = asyncHandler(async (req, res) => {
 const getCourseById = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id)
     .populate({
-      path: "author comments.user comments.replies.user",
-      model: "User",
-      select: "firstname lastname image",
-      strictPopulate: false, // add this line to fix the error
+      path: "lecturers", // Path to the lecturers array in the Course model
+      model: "User", // Model that lecturers are referencing
+      select: "fullname email image", // Fields to include from the lecturer (user)
     })
     .exec();
 
   if (!course) {
     res.status(404);
-    throw new Error("Post not found");
+    throw new Error("Course not found");
   }
 
-  res.status(200).json(course);
+  res.status(200).json(course); // Return the populated course with lecturer info
 });
 
 // Delete Post

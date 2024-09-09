@@ -19,7 +19,10 @@ app.use(bodyParser.json());
 // cors
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://edu-tech-frontend-ivory.vercel.app",
+    ],
     credentials: true,
   })
 );

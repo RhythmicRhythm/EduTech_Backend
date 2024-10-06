@@ -63,12 +63,10 @@ const registerUser = asyncHandler(async (req, res) => {
       secure: true,
     });
 
-    // Respond with user data (excluding password)
     const { password: _, ...userData } = user._doc;
     res.status(201).json({ ...userData, token });
   } catch (error) {
     console.log("Error in signup controller", error);
-
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -109,17 +107,10 @@ const loginUser = asyncHandler(async (req, res) => {
       secure: true,
     });
 
-    // Respond with user data (excluding password)
-    res.status(200).json({
-      _id: user._id,
-      fullname: user.fullname,
-      email: user.email,
-      isAdmin: user.isAdmin,
-      photo: user.photo,
-      token,
-    });
+    const { password: _, ...userData } = user._doc;
+    res.status(200).json({ ...userData, token });
   } catch (error) {
-    // Catch unexpected errors and respond with a generic error message
+    console.log("Error in signin controller", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

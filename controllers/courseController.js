@@ -40,7 +40,7 @@ const createCourse = asyncHandler(async (req, res) => {
         contentType: file.mimetype,
       });
 
-      // Get the public URL of the uploaded file
+      // Get the public URL of the uploaded file ++
       var publicUrl = await storageRef.getSignedUrl({
         action: "read",
         // expires: Date.now() + 24 * 3600 * 1000, 
